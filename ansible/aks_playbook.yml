@@ -1,0 +1,94 @@
+- name: Deploy container to AKS
+  hosts: localhost
+  vars:
+    ansible_python_interpreter: "/mnt/c/Users/crist/Documents/azure_devops/ansible/myenv/bin/python3"
+    acr_name: "casopractico2acrcristina.azurecr.io"
+  tasks:
+    - name: Set Kubernetes config 
+      set_fact:
+        acr_name: "{{ acr_name }}"
+        kube_config: "/home/cristina/.kube/config"
+    - name: Create Redis deployment
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kube_config }}"
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: redis
+
+            namespace: default
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: redis
+            template:
+              metadata:
+                labels:
+                  app: redis
+              spec:
+                containers:
+                  - name: redis
+                    image: "{{ acr_name }}/redis/redis:casopractico2"
+                    ports:
+                      - containerPort: 6379
+                    env:
+                      - name: ALLOW_EMPTY_PASSWORD
+                        value: "yes"
+    - name: Create Redis service
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kube_config }}"
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: redis
+            namespace: default
+          spec:
+            ports:
+              - port: 6379
+            selector:
+              app: redis
+    - name: Create Azure vote front deployment
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kube_config }}"
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: azure-vote-front
+            namespace: default
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: azure-vote-front
+            template:
+              metadata:
+                labels:
+                  app: azure-vote-front
+              spec:
+                containers:
+                  - name: azure-vote-front
+                    image: "{{ acr_name }}/front/azure-vote-front:casopractico2"
+                    ports:
+                      - containerPort: 80
+                    env:
+                      - name: REDIS
+                        value: redis
+    - name: Create Azure vote front service
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kube_config }}"
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: azure-vote-front
+            namespace: default
+          spec:
+            type: LoadBalancer
+            ports:
+              - port: 80
+            selector:
+              app: azure-vote-front
