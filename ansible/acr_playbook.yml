@@ -4,7 +4,7 @@
   vars:
     acr_name: "casopractico2acrcristina.azurecr.io"
     acr_username: "casopractico2acrcristina"
-    acr_password: ""
+    acr_password: "{{ acr_password }}"
   tasks:
     - name: Ensure Podman is installed
       ansible.builtin.apt:
