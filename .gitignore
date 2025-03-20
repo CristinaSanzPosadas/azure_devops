@@ -5,3 +5,4 @@ terraform.tfstate*
 
 hosts
 secrets.yml
+myenv
