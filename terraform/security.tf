@@ -22,6 +22,20 @@ resource "azurerm_network_security_rule" "ssh" {
   resource_group_name         = var.resource_group_name
 }
 
+resource "azurerm_network_security_rule" "http" {
+  name                        = "allow_http"
+  priority                    = 1002
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "80"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  network_security_group_name = azurerm_network_security_group.nsg.name
+  resource_group_name         = var.resource_group_name
+}
+
 resource "azurerm_public_ip" "vm_ip" {
   name                = "vm-public-ip"
   location            = var.location
